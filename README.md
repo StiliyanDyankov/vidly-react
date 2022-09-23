@@ -1,2 +1,2 @@
 # vidly-react
-An excercise in react.
+An excercise in react..
