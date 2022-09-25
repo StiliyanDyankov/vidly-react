@@ -1,13 +1,10 @@
 import React, { Component } from "react";
 import { getMovies } from "../services/fakeMovieService";
 import Like from "./common/like";
-import Paginator from "./common/paginator";
 
 class Movies extends Component {
     state = {
         movies: getMovies(),
-        currentPage: 1,
-        navPagesDisp: [1, 2, 3],
     };
 
     handleDelete = (movie) => {
@@ -24,24 +21,6 @@ class Movies extends Component {
         movies[index].isLiked = !movies[index].isLiked;
         this.setState({ movies });
     };
-
-    handlePageSel = (selPage) => {
-        let internState = { ...this.state };
-        internState.currentPage = selPage;
-        this.setState({currentPage: selPage});
-        // console.log("internal state");
-        // console.log(internState);
-        // console.log("real state");
-        // console.log(this.state);
-    };
-
-    moviesDisplay () {
-        let arr = [];
-        for(let i = 0; i<3; i++) {
-            arr.push(this.state.movies[i + (this.state.currentPage-1)*3])
-        }
-        return arr;
-    }
 
     render() {
         const { length: count } = this.state.movies;
@@ -62,7 +41,7 @@ class Movies extends Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.moviesDisplay().map((movie) => (
+                        {this.state.movies.map((movie) => (
                             <tr key={movie._id}>
                                 <td>{movie.title}</td>
                                 <td>{movie.genre.name}</td>
@@ -88,12 +67,6 @@ class Movies extends Component {
                         ))}
                     </tbody>
                 </table>
-                <Paginator
-                    onPageSel={this.handlePageSel}
-                    moviesDisplay={this.state.moviesDisplay}
-                    navPagesDisp={this.state.navPagesDisp}
-                    currentPage={this.state.currentPage}
-                />
             </div>
         );
     }
