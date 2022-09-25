@@ -3,11 +3,15 @@ import { getMovies } from "../services/fakeMovieService";
 import Like from "./common/like";
 import Pagination from "./common/pagination";
 import { paginate } from "../utils/paginate";
+import Genres from "./common/genres";
+import { getGenres } from "../services/fakeGenreService";
 
 class Movies extends Component {
     state = {
         movies: getMovies(),
-        pageSize: 4,
+        genres: getGenres(),
+        currentGenre: "All",
+        pageSize: 3,
         currentPage: 1,
     };
 
@@ -27,19 +31,40 @@ class Movies extends Component {
     };
 
     handlePageChange = (page) => {
-        this.setState({currentPage: page});
+        this.setState({ currentPage: page });
+    };
+
+    handleGenreChange = (genre) => {
+        this.setState({ currentGenre: genre });
+    };
+    
+    filterByGenre = () => {
+        if (this.state.currentGenre === 'All') return this.state.movies;
+        return this.state.movies.filter((movie) => movie.genre.name === this.state.currentGenre);
     };
 
     render() {
         const { length: count } = this.state.movies;
-        const { currentPage, pageSize, movies: allMovies } = this.state;
+        const {
+            currentPage,
+            pageSize,
+            movies: allMovies,
+            currentGenre,
+            genres,
+        } = this.state;
 
         if (count === 0) return <p>There are no movies in the DB.</p>;
 
-        const movies = paginate(allMovies, currentPage, pageSize);
+        const movies = paginate(this.filterByGenre(), currentPage, pageSize);
 
         return (
             <div>
+                <Genres
+                    currentGenre={currentGenre}
+                    genres={genres}
+                    onGenreChange={this.handleGenreChange}
+                />
+
                 <p>Showing {count} movies.</p>
                 <table className="table">
                     <thead>
@@ -80,7 +105,7 @@ class Movies extends Component {
                     </tbody>
                 </table>
                 <Pagination
-                    itemsCount={count}
+                    itemsCount={this.filterByGenre().length}
                     pageSize={pageSize}
                     currentPage={currentPage}
                     onPageChange={this.handlePageChange}
