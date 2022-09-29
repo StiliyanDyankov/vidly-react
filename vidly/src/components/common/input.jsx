@@ -1,6 +1,6 @@
 import React from "react";
 
-const Input = ({name, label, value, onChange, errorCase}) => {
+const Input = ({name, label, value, onChange}) => {
     return (
         <div className="form-group">
             <label htmlFor={name}>{label}</label>
@@ -12,7 +12,6 @@ const Input = ({name, label, value, onChange, errorCase}) => {
                 type="text"
                 className="form-control"
             />
-            <small className={errorCase[name]===''?'d-none text-danger fst-italic':'d-block text-danger fst-italic'}>{errorCase[name]}</small>
         </div>
     );
 };
