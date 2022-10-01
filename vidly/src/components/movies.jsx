@@ -25,7 +25,14 @@ class Movies extends Component {
 
     handleDelete = (movie) => { // upon triggering the Delete event / takes a movie obj argument
         const movies = this.state.movies.filter(m => m._id !== movie._id); // filter state movies obj based on whether passed obj has a matching id and store it in var 
-        this.setState({ movies }); // set the state with new filtered movies
+        let currentPage = this.state.currentPage;
+        console.log(this.getPagedData().totalCount)
+        if(this.getPagedData().totalCount%this.state.pageSize===1) {
+            currentPage = this.state.currentPage - 1;
+        }
+
+        this.setState({ movies, currentPage}); // set the state with new filtered movies
+
     };
 
     handleLike = (movie) => { // upon triggering the Like event / takes a movie obj

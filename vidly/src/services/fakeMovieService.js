@@ -85,7 +85,6 @@ export function getMovie(id) {
 }
 
 export function saveMovie(movie) {
-    console.log(movies.find((m) => m._id === movie._id));
     let movieInDb = movies.find((m) => m._id === movie._id) || {};
     let allGenres = [...genresAPI.getGenres()];
 
