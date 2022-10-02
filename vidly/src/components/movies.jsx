@@ -7,82 +7,92 @@ import { getGenres } from "../services/fakeGenreService";
 import MoviesTable from "./moviesTable";
 import _ from "lodash";
 import { Link } from "react-router-dom";
+import SearchBar from "./common/searchBar";
+import { search } from "./../utils/search";
 
 class Movies extends Component {
     state = {
-        movies: [], // it contains all the movies to be displayed on the page
-        genres: [], // it contains all the genres, of which each movie is a representative of, to be displayed on the sidebar
-        currentPage: 1, // pagination - it stores information about on what page are we
-        pageSize: 3, // pagination - information about how many movies should be displayed per page
-        sortColumn: { path: 'title', order: "asc" }, // sorting - info about which column is used as a metric for sorting and what is the order 
+        movies: [],
+        genres: [],
+        currentPage: 1,
+        pageSize: 3,
+        sortColumn: { path: "title", order: "asc" },
+        searchInput: "",
     };
 
-    componentDidMount() { // upon loading the component - Movies - on the page
-        const genres = [{ _id: "", name: "All Genres" }, ...getGenres()]; // genre service - store a universal genre and the returned genres in obj
+    componentDidMount() {
+        const genres = [{ _id: "", name: "All Genres" }, ...getGenres()];
 
-        this.setState({ movies: getMovies(), genres }); // movies service - populate state with returned movies and genres obj
+        this.setState({ movies: getMovies(), genres });
     }
 
-    handleDelete = (movie) => { // upon triggering the Delete event / takes a movie obj argument
-        const movies = this.state.movies.filter(m => m._id !== movie._id); // filter state movies obj based on whether passed obj has a matching id and store it in var 
+    handleDelete = (movie) => {
+        const movies = this.state.movies.filter((m) => m._id !== movie._id);
         let currentPage = this.state.currentPage;
-        console.log(this.getPagedData().totalCount)
-        if(this.getPagedData().totalCount%this.state.pageSize===1) {
+        console.log(this.getPagedData().totalCount);
+        if (this.getPagedData().totalCount % this.state.pageSize === 1) {
             currentPage = this.state.currentPage - 1;
         }
 
-        this.setState({ movies, currentPage}); // set the state with new filtered movies
-
+        this.setState({ movies, currentPage });
     };
 
-    handleLike = (movie) => { // upon triggering the Like event / takes a movie obj
-        let movies = [...this.state.movies]; // copies the current state into internal movies
-        const index = movies.indexOf(movie); // gets the index of passed movie obj in internal movies
-        movies[index] = { ...movies[index] }; // ?
-        movies[index].isLiked = !movies[index].isLiked; // sets the value of isLiked of (index el of internal movies)/the arg to the opposite
-        this.setState({ movies }); // sets the state to the changed internal movies obj
+    handleLike = (movie) => {
+        let movies = [...this.state.movies];
+        const index = movies.indexOf(movie);
+        movies[index] = { ...movies[index] };
+        movies[index].isLiked = !movies[index].isLiked;
+        this.setState({ movies });
     };
 
-    handlePageChange = (page) => { // upon triggering the PageChange event / takes a page num
-        this.setState({ currentPage: page }); // sets the state of current page to the passed number
+    handlePageChange = (page) => {
+        this.setState({ currentPage: page });
     };
 
-    handleGenreSelect = (genre) => { // upon triggering the GenreSelect event / takes a genre obj
-        this.setState({ selectedGenre: genre, currentPage: 1 }); // creates a new state var - selectedGenre - sets it to passed string genre and currentPage to 1
+    handleGenreSelect = (genre) => {
+        this.setState({ selectedGenre: genre, currentPage: 1 });
     };
 
-    handleSort = (sortColumn) => { // upon triggering the Sort event / takes a sortColumn obj
-        this.setState({sortColumn}); // sets the state to new sortColumn obj - new genre and new order
+    handleSort = (sortColumn) => {
+        this.setState({ sortColumn });
     };
 
-    getPagedData = () => { // method
+    handleSearch = ({ currentTarget: { value: input } }) => {
+        this.handleGenreSelect("All Genres");
+        this.setState({ searchInput: input });
+    };
+
+    getPagedData = () => {
         const {
-          pageSize,
-          currentPage,
-          sortColumn,
-          selectedGenre,
-          movies: allMovies
-        } = this.state; // obj destructuring
-    
-        const filtered = 
-          selectedGenre && selectedGenre._id // if selectedGenre exists and it has a non-empty id property
-            ? allMovies.filter(m => m.genre._id === selectedGenre._id) // true - return all the movies in the state from that genre
-            : allMovies; // false - return all movies
-    
-        const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]); // sort all the genre-filtered movies by a property ([sortColumn.path]) in a given order
-    
-        const movies = paginate(sorted, currentPage, pageSize); // cut the sorted movies in pieces of a given size and take corresponding piece (currentPage)
-    
-        return { totalCount: filtered.length, data: movies }; // return the array of movies, that have went through the pipeline and the length of it
-      };
+            pageSize,
+            currentPage,
+            sortColumn,
+            selectedGenre,
+            movies: allMovies,
+            searchInput,
+        } = this.state;
+
+        const searched = search(searchInput, allMovies);
+
+        const filtered =
+            selectedGenre && selectedGenre._id
+                ? searched.filter((m) => m.genre._id === selectedGenre._id)
+                : searched;
+
+        const sorted = _.orderBy(
+            filtered,
+            [sortColumn.path],
+            [sortColumn.order]
+        );
+
+        const movies = paginate(sorted, currentPage, pageSize);
+
+        return { totalCount: filtered.length, data: movies };
+    };
 
     render() {
         const { length: count } = this.state.movies;
-        const {
-            currentPage,
-            pageSize,
-            sortColumn,
-        } = this.state;
+        const { currentPage, pageSize, sortColumn, searchInput } = this.state;
 
         if (count === 0) return <p>There are no movies in the DB.</p>;
 
@@ -99,10 +109,18 @@ class Movies extends Component {
                 </div>
 
                 <div className="col-9">
-                    <p>Showing {totalCount} movies.</p>
-                        <Link to='/movieForm' className="btn btn-primary">
-                            Add Movie
-                        </Link>
+                    <Link to="/movieForm" className="btn btn-primary mb-3">
+                        Add Movie
+                    </Link>
+                    {totalCount === 0 ? (
+                        <p>No matches found</p>
+                    ) : (
+                        <p>Showing {totalCount} movies</p>
+                    )}
+                    <SearchBar
+                        onSearch={this.handleSearch}
+                        searchInput={searchInput}
+                    />
                     <MoviesTable
                         movies={movies}
                         sortColumn={sortColumn}
