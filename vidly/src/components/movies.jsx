@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { getMovies } from "../services/fakeMovieService";
+import { getMovies, deleteMovie } from "../services/movieService";
 import Pagination from "./common/pagination";
 import { paginate } from "../utils/paginate";
 import ListGroup from "./common/listGroup";
@@ -20,14 +20,17 @@ class Movies extends Component {
         searchInput: "",
     };
 
-    componentDidMount() {
+    async componentDidMount() {
         const genres = [{ _id: "", name: "All Genres" }, ...getGenres()];
-
-        this.setState({ movies: getMovies(), genres });
+        this.setState({ movies: await getMovies(), genres });
     }
 
-    handleDelete = (movie) => {
+    handleDelete = async (movie) => {
+        let oMovies = [...this.state.movies];
+        let oCurrentPage = this.state.currentPage;
+
         const movies = this.state.movies.filter((m) => m._id !== movie._id);
+
         let currentPage = this.state.currentPage;
         console.log(this.getPagedData().totalCount);
         if (this.getPagedData().totalCount % this.state.pageSize === 1) {
@@ -35,6 +38,8 @@ class Movies extends Component {
         }
 
         this.setState({ movies, currentPage });
+
+        if (await deleteMovie(movie)) this.setState({ oMovies, oCurrentPage });
     };
 
     handleLike = (movie) => {
@@ -43,6 +48,7 @@ class Movies extends Component {
         movies[index] = { ...movies[index] };
         movies[index].isLiked = !movies[index].isLiked;
         this.setState({ movies });
+
     };
 
     handlePageChange = (page) => {
