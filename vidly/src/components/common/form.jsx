@@ -8,8 +8,9 @@ class Form extends Component {
     state = {
         data: {},
         errors: {},
+        genres:{},
     };
-
+    
     validate = () => {
         const { error } = Joi.validate(this.state.data, this.schema, {
             abortEarly: false,
@@ -86,7 +87,6 @@ class Form extends Component {
 
     renderSelect(name, label, src) {
         const { data, errors } = this.state;
-
         return (
             <SelectMenu
                 name={name}
